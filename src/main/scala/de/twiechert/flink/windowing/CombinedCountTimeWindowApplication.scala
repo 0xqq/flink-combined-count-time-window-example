@@ -10,10 +10,6 @@ import org.apache.flink.streaming.api.windowing.evictors.TimeEvictor
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.triggers.CountTrigger
 import org.apache.flink.streaming.api.TimeCharacteristic
-import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor
-import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
-import org.apache.flink.streaming.api.windowing.windows.{GlobalWindow, TimeWindow}
-import org.apache.flink.util.Collector
 
 object CombinedCountTimeWindowApplication {
 
@@ -46,8 +42,6 @@ object CombinedCountTimeWindowApplication {
         .window(GlobalWindows.create())
         .trigger(CountTrigger.of(10))
         .evictor(TimeEvictor.of(Time.minutes(30)))
-      //.process(new MyProcessWindowFunction())
-
         .sum(4)
 
      uberPickups.writeAsCsv(Params.getOutputfilePath())
@@ -60,15 +54,3 @@ object CombinedCountTimeWindowApplication {
   def trimString(string: String): String = string.substring(1, string.length - 2)
 }
 
-
-class MyProcessWindowFunction extends ProcessWindowFunction[(Long, Double, Double, String, Int), String, String, GlobalWindow] {
-
-
-  def process(key: String, context: Context, input: Iterable[(Long, Double, Double, String, Int)], out: Collector[String]) = {
-    var count = 0L
-    for (in <- input) {
-      count = count + 1
-    }
-    out.collect(s"Window ${context.window} count: $count")
-  }
-}
